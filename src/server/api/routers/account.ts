@@ -75,7 +75,9 @@ export const accountRouter = createTRPCRouter({
         ctx.auth.userId,
       );
 
-      let filter: Prisma.ThreadWhereInput = {};
+      let filter: Prisma.ThreadWhereInput = {
+        accountId:input.accountId
+      };
       if (input.tab === "inbox") {
         filter.inboxStatus = true;
       } else if (input.tab === "draft") {
