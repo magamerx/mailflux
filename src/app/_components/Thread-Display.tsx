@@ -13,6 +13,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { format } from "date-fns";
+import EmailDisplay from "./Email-Display";
 
 
 const ThreadDisplay = () => {
@@ -90,8 +92,15 @@ const ThreadDisplay = () => {
             </div>
             <Separator></Separator>
             <div className="max-h-[calc(100vh-500px)] overflow-scroll flex flex-col">
-                <div></div>
+                <div className="p-6 flex flex-col gap-4">
+                    {thread.emails.map(email => {
+                        return <EmailDisplay key={email.id} email={email}></EmailDisplay>
+                    })}
+                </div>
             </div>
+            <div className="flex-1"></div>
+            <Separator className="mt-auto"></Separator>
+            {/* {Reply Box} */}
         </div>
         </>:<>
         <div className="p-8 text-center text-muted-foreground">
