@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import EmailDisplay from "./Email-Display";
+import ReplyBox from "./reply-box";
 
 
 const ThreadDisplay = () => {
@@ -101,6 +102,7 @@ const ThreadDisplay = () => {
             <div className="flex-1"></div>
             <Separator className="mt-auto"></Separator>
             {/* {Reply Box} */}
+            <ReplyBox></ReplyBox>
         </div>
         </>:<>
         <div className="p-8 text-center text-muted-foreground">

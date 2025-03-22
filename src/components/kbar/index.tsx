@@ -3,6 +3,7 @@
 import { Action, KBarAnimator, KBarPortal, KBarPositioner, KBarProvider, KBarSearch, Priority } from "kbar";
 import RenderResults from "./render-results";
 import { useLocalStorage } from "usehooks-ts";
+import useThemeSwtiching from "./use-theme-switching";
 
 export default function KBar({ children }: { children: React.ReactNode }) {
     const [tab,setTab] = useLocalStorage("tab","inbox");
@@ -44,6 +45,31 @@ export default function KBar({ children }: { children: React.ReactNode }) {
             perform: () => {
                 setTab("sent")
             }
+        },
+        {
+            id: "pendingAction",
+            name: "See done",
+            shortcut: ["g", "d"],
+            keywords:"done",
+            priority:Priority.HIGH,
+            section: "Naviagion",
+            subtitle: "View the done emails",
+            perform: () => {
+                setDone(true);
+            }
+        },
+        {
+            
+            id: "doneAction",
+            name: "See Pending",
+            shortcut: ["g", "u"],
+            keywords:"pending, undone, not done",
+            priority:Priority.HIGH,
+            section: "Naviagion",
+            subtitle: "View the pending emails",
+            perform: () => {
+                setDone(false);
+            }
         }
     ];
 
@@ -55,6 +81,7 @@ export default function KBar({ children }: { children: React.ReactNode }) {
 }
 
 const ActualComponent = ({ children }: { children: React.ReactNode }) => {
+    useThemeSwtiching();
     return <>
         <KBarPortal>
             <KBarPositioner className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm scrollbar-hide !p-0 z-[999]">

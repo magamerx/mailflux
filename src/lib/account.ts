@@ -223,6 +223,7 @@ export class Account {
     return response.data.historyId; // Save this for future incremental syncs
   }
 
+  /*  Map gamil message to EmailMessage type */
   private async mapGmailMessageToEmailMessage(
     gmailMessage: any,
   ): Promise<EmailMessage> {
@@ -371,5 +372,29 @@ export class Account {
       folderId: undefined, // Not available in Gmail API
       omitted: gmailMessage["omitted"] || [],
     };
+  }
+
+  async sendEmail({
+    from,
+    subject,
+    body,
+    inReplyTo,
+    references,
+    to,
+    cc,
+    bcc,
+    replyTo
+  }:{
+    from:EmailAddress,
+    subject:string,
+    body:string,
+    inReplyTo:string,
+    references:string,
+    to:EmailAddress[],
+    cc?:EmailAddress[],
+    bcc?:EmailAddress[],
+    replyTo?:EmailAddress
+  }){
+    
   }
 }
