@@ -374,27 +374,75 @@ export class Account {
     };
   }
 
-  async sendEmail({
-    from,
-    subject,
-    body,
-    inReplyTo,
-    references,
-    to,
-    cc,
-    bcc,
-    replyTo
-  }:{
-    from:EmailAddress,
-    subject:string,
-    body:string,
-    inReplyTo:string,
-    references:string,
-    to:EmailAddress[],
-    cc?:EmailAddress[],
-    bcc?:EmailAddress[],
-    replyTo?:EmailAddress
-  }){
-    
+  
+async sendEmail({
+  from,
+  subject,
+  body,
+  inReplyTo,
+  references,
+  threadId,
+  to,
+  cc,
+  bcc,
+  replyTo,
+}: {
+  from: EmailAddress;
+  subject: string;
+  body: string;
+  inReplyTo?: string;
+  references?: string;
+  threadId?: string;
+  to: EmailAddress[];
+  cc?: EmailAddress[];
+  bcc?: EmailAddress[];
+  replyTo?: EmailAddress;
+}) {
+  try {
+    if (!this.token) {
+      throw new Error("❌ No access token found. Please authenticate.");
+    }
+
+    const formatEmail = (email: EmailAddress) =>
+      email.name ? `${email.name} <${email.address}>` : email.address;
+
+    const emailLines = [];
+    emailLines.push(`From: ${formatEmail(from)}`);
+    emailLines.push(`To: ${to.map(formatEmail).join(", ")}`);
+    if (cc?.length) emailLines.push(`Cc: ${cc.map(formatEmail).join(", ")}`);
+    if (bcc?.length) emailLines.push(`Bcc: ${bcc.map(formatEmail).join(", ")}`);
+    emailLines.push(`Subject: ${subject}`);
+    if (replyTo) emailLines.push(`Reply-To: ${formatEmail(replyTo)}`);
+    if (inReplyTo) emailLines.push(`In-Reply-To: ${inReplyTo}`);
+    if (references) emailLines.push(`References: ${references}`);
+    emailLines.push("Content-Type: text/html; charset=UTF-8");
+    emailLines.push("");
+    emailLines.push(body);
+
+    const rawMessage = Buffer.from(emailLines.join("\r\n"))
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+
+    const response = await axios.post(
+      `https://www.googleapis.com/gmail/v1/users/me/messages/send`,
+      { raw: rawMessage, threadId },
+      {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("📩 Email sent:", response.data);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("❌ Error sending email:", JSON.stringify(error.response?.data, null, 2));
+    } else {
+      console.error("❌ Unexpected error:", error);
+    }
   }
+}
 }

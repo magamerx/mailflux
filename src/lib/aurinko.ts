@@ -21,7 +21,8 @@ export const getGoogleCode = async ()=> {
       "openid",
       "email",
       "profile",
-      "https://www.googleapis.com/auth/gmail.readonly", // ✅ Read-only Gmail access
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/gmail.send", // ✅ Read-only Gmail access
       "https://www.googleapis.com/auth/gmail.modify"    // ✅ Modify Gmail (optional)
     ].join(" "),
     access_type: "offline",  // ✅ Required for refresh token

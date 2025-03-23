@@ -5,6 +5,7 @@ import EmailEditor from "./email-editor";
 import useThreads from "@/hooks/use-threads";
 import { RouterOutputs } from "@/trpc/react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const ReplyBox = () => {
     const { threadId,accountId } = useThreads();
@@ -44,8 +45,35 @@ const Components = ({replyDetails}:{replyDetails:RouterOutputs["account"]["getRe
 
     },[threadId,replyDetails]);
 
+    const sendEmail = api.account.sendEmail.useMutation();
+
     const handleSend = async (value:string) => {
-        console.log(value);
+        console.log("gg======================")
+        if (!replyDetails) {
+            return;
+        }
+
+        sendEmail.mutate({
+            accountId,
+            threadId: threadId ?? undefined,
+            body: value,
+            subject,
+            from:replyDetails.from,
+            to:replyDetails.to.map(to => ({address: to.address,name: to.name ?? ""})),
+            cc:replyDetails.cc.map(cc => ({address: cc.address,name: cc.name ?? ""})),
+
+            replyTo:replyDetails.from,
+            inReplyTo:replyDetails.id
+        },{
+            onSuccess:() => {
+                toast.success("Email Send!");
+            },
+            onError: (error) => {
+                console.log(error);
+                toast.error("Error sending email");
+            }
+        })
+        console.log(value+"vfvfvfvffv-----------------f");
     }
     
     return (
@@ -61,7 +89,7 @@ const Components = ({replyDetails}:{replyDetails:RouterOutputs["account"]["getRe
 
         to={replyDetails.to.map(to => to.address)}
 
-        isSending={false}
+        isSending={sendEmail.isPending}
         handleSend={handleSend}
 
         defaultToolBarExpanded={false}

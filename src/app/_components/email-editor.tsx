@@ -35,6 +35,8 @@ const EmailEditor = ({subject,setSubject,toValues,setToValues,ccValues,setCcValu
     const [expanded,setExpanded] = React.useState<boolean>(defaultToolBarExpanded);
     const [token,setToken] = useState<string>("");
 
+    console.log("EmailEditor initialized, handleSend:", handleSend);
+
     const aiGenerate = async  (value:string) => {
         const { output } = await generate(value);
 
@@ -129,7 +131,8 @@ const EmailEditor = ({subject,setSubject,toValues,setToValues,ccValues,setCcValu
                 </span>
                 <Button onClick={async ()=>{
                     editor?.commands?.clearContent();
-                    handleSend(value);
+                    console.log(value+"gotcha");
+                    await handleSend(value);
                 }} disabled={isSending}>
                     Send
                 </Button>
