@@ -13,6 +13,8 @@ import { AccountSwitcher } from "./account-switcher";
 import Sidebar from "./Sidebar";
 import ThreadList from "./Thread-List";
 import ThreadDisplay from "./Thread-Display";
+import SearchBar from "./search-bar";
+import AskAI from "./ask-ai";
 
 type props = {
     defaultLayout:number[] | undefined,
@@ -53,7 +55,7 @@ export default function Mail({defaultLayout = [20,32,48],navCollapsedSize,defaul
                         <div className="flex-1">
                         </div>
                              {/* {Ai} */}
-                             Ask Ai
+                             <AskAI />
                     </div>
                     
                 </ResizablePanel>
@@ -74,6 +76,7 @@ export default function Mail({defaultLayout = [20,32,48],navCollapsedSize,defaul
 
                         <Separator></Separator>
                         {/* {Search Bar} */}
+                        <SearchBar />
                         <TabsContent value="inbox">
                             <ThreadList></ThreadList>
                         </TabsContent>

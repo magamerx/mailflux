@@ -5,6 +5,8 @@ import {
   SyncUpdatedResponse,
   EmailAttachment,
 } from "./type";
+import { db } from "@/server/db";
+import { syncEmailToDatabase } from "./sync-to-db";
 
 // export class Account {
 //     private token: string;
@@ -151,7 +153,7 @@ export class Account {
       },
     );
 
-    return response.data; // { history: [{ messages: [{ id, threadId }] }] }
+    return response; // { history: [{ messages: [{ id, threadId }] }] }
   }
 
   /** 3️⃣ Perform Full Initial Sync */
@@ -194,6 +196,72 @@ export class Account {
       console.error("❌ Error during email sync:", error);
     }
   }
+
+
+  async syncEmails(){
+    try {
+      // Retrieve the last stored historyId
+      const account = await db.account.findUnique({
+        where: { token: this.token }
+      });
+  
+      if (!account || !account.nextDeltaToken) {
+        throw new Error("⚠️ No previous historyId found. Perform an initial sync first.");
+      }
+  
+      console.log(`🔄 Syncing important emails since historyId: ${account.nextDeltaToken}`);
+  
+      // Fetch updates from Gmail API
+      const response = await this.getUpdatedEmails(account.nextDeltaToken);
+  
+      if (!response.data.history) {
+        console.log("✅ No new important emails to sync.");
+        return { emails: [], historyId: account.nextDeltaToken };
+      }
+  
+      let importantEmails: EmailMessage[] = [];
+      let newHistoryId = response.data.historyId;
+  
+      // Process new emails
+      for (const history of response.data.history) {
+        if (history.messagesAdded) {
+          for (const messageObj of history.messagesAdded) {
+            const message = messageObj.message;
+  
+            // ✅ Pre-check "IMPORTANT" label before fetching full email data
+            if (message.labelIds?.includes("IMPORTANT")) {
+              console.log(`📩 Important Email Found: ${message.id}`);
+  
+              // Fetch detailed email data only if it's important
+              const emailData = await this.getEmailDetails(message.id);
+              importantEmails.push(emailData);
+            }
+          }
+        }
+      }
+  
+      console.log(`📥 Synced ${importantEmails.length} important emails`);
+  
+      // Save important emails to the database
+      if (importantEmails.length > 0) {
+        await syncEmailToDatabase(importantEmails, account.id);
+      }
+  
+      // Update historyId in the database
+      await db.account.update({
+        where: { id: account.id },
+        data: { nextDeltaToken: newHistoryId }
+      });
+  
+      return { emails: importantEmails, historyId: newHistoryId };
+  
+    } catch (error) {
+      console.error("❌ Error during email sync:", error);
+      throw error;
+    }
+  }
+
+
 
   /** 🔍 Fetch Full Email Details */
   async getEmailDetails(messageId: string) {

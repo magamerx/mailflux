@@ -6,6 +6,7 @@ import { a } from "node_modules/framer-motion/dist/types.d-B50aGbjN";
 import { emailAddressSchema } from "@/lib/type";
 import { threadId } from "worker_threads";
 import { Account } from "@/lib/account";
+import { OramaClient } from "@/lib/orama";
 
 export const authoriseAccountAccess = async (
   accountId: string,
@@ -78,6 +79,9 @@ export const accountRouter = createTRPCRouter({
         input.accountId,
         ctx.auth.userId,
       );
+
+      const acc = new Account(account.token);
+      acc.syncEmails().catch(console.error);
 
       let filter: Prisma.ThreadWhereInput = {
         accountId:input.accountId
@@ -207,5 +211,15 @@ export const accountRouter = createTRPCRouter({
         inReplyTo:input.inReplyTo,
         threadId:input.threadId
       })
+    }),
+    searchEamils: privateProcedure.input(z.object({
+      accountId:z.string(),
+      query:z.string()
+    })).mutation(async ({ctx,input}) => {
+      const account = await authoriseAccountAccess(input.accountId,ctx.auth.userId);
+      const orama = new OramaClient(account.id);
+      await orama.initialize();
+      const results = await orama.search({term:input.query});
+      return results;
     })
 });

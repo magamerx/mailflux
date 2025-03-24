@@ -3,9 +3,15 @@
 import ThemeToggle from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
-import ComposeButton from "../_components/compose-button";
+// import ComposeButton from "../_components/compose-button";
 
 // import { Mail } from "../_components/Mail";
+
+const ComposeButton = dynamic(()=>{
+    return import("../_components/compose-button");
+},{
+    ssr:false
+})
 
 const Mail =  dynamic(()=>{
     return import("../_components/Mail")
