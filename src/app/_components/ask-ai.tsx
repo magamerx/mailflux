@@ -6,14 +6,20 @@ import { Send, SparkleIcon } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import useThreads from "@/hooks/use-threads";
 import { Message } from "@ai-sdk/react";
+import PremiumBanner from "./premium-banner";
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
 
 const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
     const {accountId} = useThreads();
+    const utils = api.useUtils();
 
     const { input, handleInputChange, handleSubmit, messages, setMessages } = useChat({
         api: "/api/chat",
         body: { accountId },
-        onError: (error) => console.log("error", error),
+        onError: (error) => {
+            toast.error(error.message);
+        },
         initialMessages: [],
         onResponse: async (response) => {
             // Ensure newMessage adheres to the Message type
@@ -48,6 +54,9 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
                 }
             }
         },
+        onFinish:() => {
+            utils.account.getChatbotInteraction.refetch();
+        },
     });
 
     if (isCollapsed) {
@@ -55,6 +64,8 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
     }
 
     return <div className="p-4 mb-14">
+        <PremiumBanner />
+        <div className="h-4"></div>
         <motion.div className="flex flex-1 flex-col items-end pb-4 p-4 rounded-lg bg-gray-100 shadow-inner dark:bg-gray-900">
             <div className="max-h-[50vh] overflow-y-scroll w-full flex flex-col gap-2" id="message-container">
                 <AnimatePresence mode="wait">

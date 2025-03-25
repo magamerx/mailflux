@@ -7,8 +7,34 @@ import exp from "constants";
 import { access } from "fs";
 import { NextResponse } from "next/server";
 import { URLSearchParams } from "url";
+import { getSubscriptionStatus } from "./stripe-actions";
+import { db } from "@/server/db";
+import { FREE_ACCOUNTS_PER_USER, PRO_ACCOUNTS_PER_USER } from "@/constants";
 
 export const getGoogleCode = async ()=> {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("unauthorised");
+  }
+
+  const isSubscribed = await getSubscriptionStatus();
+  const accounts = await db.account.count({
+    where:{
+      userId:userId
+    }
+  });
+
+  if (isSubscribed) {
+    if (accounts >= PRO_ACCOUNTS_PER_USER) {
+      throw new Error("You have reached the maximum number of accounts for your subscription");
+    }
+  }else{
+    if (accounts >= FREE_ACCOUNTS_PER_USER) {
+    
+      throw new Error("You have reached the maximum number of accounts for your subscription");
+    }
+  }
+
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.NEXT_PUBLIC_URL) {
     return "not configured";
   }

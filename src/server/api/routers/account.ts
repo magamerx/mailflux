@@ -7,6 +7,8 @@ import { emailAddressSchema } from "@/lib/type";
 import { threadId } from "worker_threads";
 import { Account } from "@/lib/account";
 import { OramaClient } from "@/lib/orama";
+import { auth } from "@clerk/nextjs/server";
+import { FREE_CREDITS_PER_DAY } from "@/constants";
 
 export const authoriseAccountAccess = async (
   accountId: string,
@@ -221,5 +223,20 @@ export const accountRouter = createTRPCRouter({
       await orama.initialize();
       const results = await orama.search({term:input.query});
       return results;
+    }),
+    getChatbotInteraction:privateProcedure.input(z.object({
+      accountId:z.string()
+    })).query(async ({ctx,input}) => {
+      const account = await authoriseAccountAccess(input.accountId,ctx.auth.userId);
+      const today = new Date().toDateString();
+      const chatbotInteraction = await db.chatbotInteraction.findUnique({
+        where:{
+          day:today,
+          userId:ctx.auth.userId
+        }
+      });
+
+      const remainingCredits = FREE_CREDITS_PER_DAY - (chatbotInteraction?.count || 0);
+      return remainingCredits;
     })
 });

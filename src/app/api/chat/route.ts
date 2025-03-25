@@ -3,15 +3,41 @@ import { NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { auth } from "@clerk/nextjs/server";
 import { OramaClient } from "@/lib/orama";
+import { getSubscriptionStatus } from "@/lib/stripe-actions";
+import { FREE_CREDITS_PER_DAY } from "@/constants";
 
 // Initialize Google Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: Request) {
+    const today = new Date().toDateString();
+
     try {
         const { userId } = await auth();
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const isSubscribed = await getSubscriptionStatus();
+        if (!isSubscribed) {
+            const chatbotInteraction = await db.chatbotInteraction.findUnique({
+                where:{
+                    day:today,
+                    userId:userId
+                }
+            });
+
+            if (!chatbotInteraction) {
+                await db.chatbotInteraction.create({
+                    data:{
+                        day:today,
+                        userId,
+                        count:1
+                    }
+                });
+            }else if (chatbotInteraction.count >= FREE_CREDITS_PER_DAY){
+                return new NextResponse("You have reached the free limit for today",{status:429});
+            }
         }
 
         // Extract user message and accountId
@@ -37,7 +63,7 @@ export async function POST(req: Request) {
         ${context.hits.map((hit) => JSON.stringify(hit.document)).join("\n")}
         END OF CONTEXT BLOCK
         
-        When responding:
+        When resconditionponding:
         - Be helpful, clever, and articulate.
         - Use the provided email context to inform your response.
         - If the context lacks enough information, politely indicate that.
@@ -60,6 +86,17 @@ export async function POST(req: Request) {
             }
         });
 
+        await db.chatbotInteraction.update({
+            where:{
+                day:today,
+                userId:userId
+            },
+            data:{
+                count:{
+                    increment: 1
+                }
+            }
+        })
         /// Return streaming response
         return new Response(stream, {
             headers: { "Content-Type": "text/plain" },
