@@ -10,6 +10,7 @@ const useThreads = () => {
     const [tab] = useLocalStorage("tab", "inbox");
     const [done] = useLocalStorage("done", false);
     const [threadId,setThreadId] = useAtom(threadIdAtom);
+    
 
     const {data:threads,isFetching,refetch} = api.account.getThreads.useQuery({accountId,tab,done},
         {enabled: !!accountId && !!tab,placeholderData:e=>e,refetchInterval:5000});
