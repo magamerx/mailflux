@@ -16,7 +16,7 @@ export const authoriseAccountAccess = async (
 ) => {
   const account = await db.account.findFirst({
     where: { id: accountId, userId },
-    select: { id: true, emailAddress: true, name: true, token: true },
+    select: { id: true, emailAddress: true, name: true, token: true,refreshToken:true },
   });
 
   if (!account) {
@@ -82,7 +82,7 @@ export const accountRouter = createTRPCRouter({
         ctx.auth.userId,
       );
 
-      const acc = new Account(account.token);
+      const acc = new Account(account.token,account.refreshToken);
       acc.syncEmails().catch(console.error);
 
       let filter: Prisma.ThreadWhereInput = {
@@ -197,7 +197,7 @@ export const accountRouter = createTRPCRouter({
       threadId:z.string().optional()
     })).mutation(async ({ctx,input}) => {
       const account = await authoriseAccountAccess(input.accountId,ctx.auth.userId);
-      const acc = new Account(account.token);
+      const acc = new Account(account.token,account.refreshToken);
       console.log(account.token);
 
       console.log("inside trpc-------------------------");

@@ -31,7 +31,10 @@ export const GET = async (req: NextRequest) => {
       });
     }
 
+    console.log(JSON.stringify(data));
+
     const userData = await getAccountDetails(data.access_token);
+
 
     await db.account.upsert({
       where: {
@@ -39,6 +42,7 @@ export const GET = async (req: NextRequest) => {
       },
       update: {
         token: data.access_token,
+        refreshToken:data.refresh_token
       },
       create: {
         id: userData.sub.toString(),
@@ -46,7 +50,8 @@ export const GET = async (req: NextRequest) => {
         emailAddress: userData.email,
         name: userData.name,
         token: data.access_token,
-        provider:"Google"
+        provider:"Google",
+        refreshToken:data.refresh_token
       },
     });
 

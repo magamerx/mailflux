@@ -7,6 +7,7 @@ import {
 } from "./type";
 import { db } from "@/server/db";
 import { syncEmailToDatabase } from "./sync-to-db";
+import { refreshGoogleToken } from "./aurinko";
 
 // export class Account {
 //     private token: string;
@@ -111,9 +112,11 @@ let emailFetched = 0;
 
 export class Account {
   private token: string;
+  private refreshToken:string;
 
-  constructor(token: string) {
+  constructor(token: string,refreshToken:string) {
     this.token = token;
+    this.refreshToken = refreshToken;
   }
 
   /** 1️⃣ Start Initial Sync (Fetch Emails) */
@@ -198,7 +201,7 @@ export class Account {
   }
 
 
-  async syncEmails(){
+  async syncEmails(): Promise<{ emails: EmailMessage[]; historyId: string } | undefined> {
     try {
       // Retrieve the last stored historyId
       const account = await db.account.findUnique({
@@ -256,8 +259,24 @@ export class Account {
       return { emails: importantEmails, historyId: newHistoryId };
   
     } catch (error) {
-      console.error("❌ Error during email sync:", error);
-      throw error;
+      if (error.response?.status === 401) {
+        console.log("Access token expired. Refreshing...");
+        const newTokens = await refreshGoogleToken(this.refreshToken);
+
+        if (newTokens.access_token) {
+          // Store new access_token and use it
+          await db.account.update({
+            where: {
+              token:this.token
+            },
+            data:{
+              token:newTokens.access_token
+            }
+          });
+
+          return await this.syncEmails();
+        }
+      }
     }
   }
 

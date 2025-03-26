@@ -87,6 +87,29 @@ export const getAccountDetails = async (access_token:string) =>{
   }
 }
 
+
+export const refreshGoogleToken = async (refreshToken: string) => {
+  try {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      return NextResponse.json({ message: "Not configured" });
+    }
+
+    const params = {
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    };
+
+    const { data } = await axios.post("https://oauth2.googleapis.com/token", null, { params });
+
+    return data;
+  } catch (error) {
+    console.error("Error refreshing Google token:", error);
+    return NextResponse.json({ message: "Can't refresh token" });
+  }
+};
+
 ////////aurinko
 
 

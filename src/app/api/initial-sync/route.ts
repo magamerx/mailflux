@@ -20,7 +20,7 @@ export const POST = async(req:NextRequest)=>{
 
     if(!dbAccount) return NextResponse.json({error:"Account not found"},{status:404});
 
-    const account = new Account(dbAccount.token);
+    const account = new Account(dbAccount.token,dbAccount.refreshToken);
     const response = await account.performInitialSync();
 
     if (!response) {

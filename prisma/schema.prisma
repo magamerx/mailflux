@@ -69,6 +69,7 @@ model Account {
     oramaIndex Json?
 
     token        String @unique
+    refreshToken String @default("")
     provider     String
     emailAddress String
     name         String
