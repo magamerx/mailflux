@@ -47,12 +47,11 @@ export const AccountSwitcher = ({isCollapsed}:props) => {
               })}
               <div onClick={async ()=>{
                 try {
-                    
+                    const authUrl = await getGoogleCode();
+                    window.location.href = authUrl;
                 } catch (error) {
                     toast.error(error.message);
                 }
-                const authUrl = await getGoogleCode();
-                window.location.href = authUrl;
               }} className="flex relative hover:bg-gray-50 w-full cursor-pointer items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent">
                 <Plus className="size-4 mr-1"></Plus>
                 Add account

@@ -20,7 +20,7 @@ const Mail =  dynamic(()=>{
 })
 
 export default function MailDashboard(){
-    return <div>
+    return <div className="relative">
         <div className="absolute bottom-4 left-4">
             <div className="flex items-center gap-2">
             <UserButton />

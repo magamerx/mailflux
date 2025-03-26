@@ -17,29 +17,6 @@ export async function POST(req: Request) {
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const isSubscribed = await getSubscriptionStatus();
-        if (!isSubscribed) {
-            const chatbotInteraction = await db.chatbotInteraction.findUnique({
-                where:{
-                    day:today,
-                    userId:userId
-                }
-            });
-
-            if (!chatbotInteraction) {
-                await db.chatbotInteraction.create({
-                    data:{
-                        day:today,
-                        userId,
-                        count:1
-                    }
-                });
-            }else if (chatbotInteraction.count >= FREE_CREDITS_PER_DAY){
-                return new NextResponse("You have reached the free limit for today",{status:429});
-            }
-        }
-
         // Extract user message and accountId
         const { messages, accountId } = await req.json();
 
@@ -72,7 +49,7 @@ export async function POST(req: Request) {
         `;
 
         // Generate AI response using Gemini 2 Flash
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
         const result = await model.generateContentStream(prompt);
 
         // Create a readable stream to return to the client
@@ -86,17 +63,6 @@ export async function POST(req: Request) {
             }
         });
 
-        await db.chatbotInteraction.update({
-            where:{
-                day:today,
-                userId:userId
-            },
-            data:{
-                count:{
-                    increment: 1
-                }
-            }
-        })
         /// Return streaming response
         return new Response(stream, {
             headers: { "Content-Type": "text/plain" },

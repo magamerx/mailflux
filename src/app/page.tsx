@@ -1,10 +1,16 @@
-import { Button } from "@/components/ui/button";
-import { LinkAccountButton } from "./_components/link-account-button";
+"use client"
 
+import dynamic from "next/dynamic";
 
-export default async function Home() {
+const MailDashboard = dynamic(()=>{
+    return import("./mail/page");
+},{
+    ssr:false
+})
+
+export default function Home() {
 
   return (
-    <LinkAccountButton></LinkAccountButton>
+    <MailDashboard />
   );
 }
